@@ -98,10 +98,11 @@ class SlackMrkdwn < Redcarpet::Render::Base
   end
 
   # list item
-  def list_item(entry, _style)
+  def list_item(entry, style)
+    entry = format_list_item(entry, style)
     if @last_entries && entry.end_with?(@last_entries)
       entry = indent_list_items(entry)
-      @last_entries = nil
+      clear_last_list_entries
     end
     entry
   end
@@ -133,20 +134,27 @@ class SlackMrkdwn < Redcarpet::Render::Base
     when :ordered
       number_list(entries)
     when :unordered
-      add_dots(entries)
+      entries
+    else
+      entries
     end
   end
 
-  def add_dots(entries)
-    entries.gsub(/^(\S+.*)$/, '• \1')
+  def format_list_item(entry, style)
+    case style
+    when :ordered
+      "1. #{entry}"
+    else
+      "• #{entry}"
+    end
   end
 
   def number_list(entries)
     count = 0
-    entries.gsub(/^(\S+.*)$/) do
+    entries.gsub(/^1\.(.*)$/) do
       match = Regexp.last_match
       count += 1
-      "#{count}. #{match[0]}"
+      "#{count}.#{match[1]}"
     end
   end
 
